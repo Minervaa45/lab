@@ -41,11 +41,13 @@ INSTALLED_APPS = [
     'myapp',
     'chat',
     'channels',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -138,3 +140,8 @@ CHANNEL_LAYERS = {
 
 # Указание ASGI-приложения
 ASGI_APPLICATION = 'sites.routing.application'
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
