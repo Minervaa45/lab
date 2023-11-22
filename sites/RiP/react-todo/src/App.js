@@ -1,30 +1,44 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
+import Chat from './Components/Chat';
+import TodoApp from './Components/TodoApp';
 
 function App() {
+  const [messages, setMessages] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [taskInput, setTaskInput] = useState('');
+  const [newMessage, setNewMessage] = useState('');
+  const [newTask, setNewTask] = useState('');
 
-  // Получение задач с сервера
   useEffect(() => {
+    axios.get('http://localhost:3001/messages')
+      .then(response => setMessages(response.data))
+      .catch(error => console.error('Error fetching messages:', error));
+
     axios.get('http://localhost:3001/tasks')
       .then(response => setTasks(response.data))
       .catch(error => console.error('Error fetching tasks:', error));
   }, []);
 
-  const addTask = () => {
-    if (taskInput.trim() !== '') {
-      // Отправка новой задачи на сервер
-      axios.post('http://localhost:3001/tasks', { text: taskInput })
+  const addMessage = () => {
+    if (newMessage.trim() !== '') {
+      axios.post('http://localhost:3001/messages', { text: newMessage })
+        .then(response => setMessages([...messages, response.data]))
+        .catch(error => console.error('Error sending message:', error));
+      setNewMessage('');
+    }
+  };
+
+  const addTask = (taskText) => {
+    if (taskText.trim() !== '') {
+      axios.post('http://localhost:3001/tasks', { text: taskText })
         .then(response => setTasks([...tasks, response.data]))
         .catch(error => console.error('Error adding task:', error));
-      setTaskInput('');
     }
   };
 
   const removeTask = (taskId) => {
-    // Удаление задачи с сервера
     axios.delete(`http://localhost:3001/tasks/${taskId}`)
       .then(() => setTasks(tasks.filter(task => task.id !== taskId)))
       .catch(error => console.error('Error deleting task:', error));
@@ -32,24 +46,9 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Todo App</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Enter task"
-          value={taskInput}
-          onChange={(e) => setTaskInput(e.target.value)}
-        />
-        <button onClick={addTask}>Add Task</button>
-      </div>
-      <ul>
-        {tasks.map(task => (
-          <li key={task.id}>
-            {task.text}
-            <button onClick={() => removeTask(task.id)}>Remove</button>
-          </li>
-        ))}
-      </ul>
+      <h1>Todo App with Chat</h1>
+      <Chat messages={messages} onSendMessage={addMessage} />
+      <TodoApp tasks={tasks} onAddTask={addTask} onRemoveTask={removeTask} />
     </div>
   );
 }
