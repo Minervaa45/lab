@@ -54,7 +54,16 @@ function App() {
 
         <Routes>
           <Route path="/chat" element={<Chat messages={messages} />} />
-          <Route path="/todo" element={<TodoApp tasks={tasks} />} />
+          <Route
+            path="/todo"
+            element={
+              <TodoApp
+                tasks={tasks}
+                onAddTask={addTask} // Убедитесь, что здесь правильно передается функция addTask
+                onRemoveTask={removeTask}
+              />
+            }
+          />
           <Route
             path="/"
             element={
