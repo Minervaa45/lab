@@ -12,11 +12,11 @@ function App() {
   const [newTask, setNewTask] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/todo/')
+    axios.get('http://localhost:8000/api/chat/')
       .then(response => setMessages(response.data))
       .catch(error => console.error('Ошибка сообщения:', error));
 
-    axios.get('http://localhost:8000/api/chat/')
+    axios.get('http://localhost:8000/api/todo/')
       .then(response => setTasks(response.data))
       .catch(error => console.error('Ошибка таска:', error));
   }, []);
