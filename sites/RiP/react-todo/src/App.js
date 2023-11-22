@@ -1,6 +1,6 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
 import './App.css';
 import Chat from './Components/Chat';
 import TodoApp from './Components/TodoApp';
@@ -45,11 +45,42 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <h1>Todo App</h1>
-      <Chat messages={messages} onSendMessage={addMessage} />
-      <TodoApp tasks={tasks} onAddTask={addTask} onRemoveTask={removeTask} />
-    </div>
+    <Router>
+      <div className="App">
+        <nav>
+          <Link to="/chat">Чат</Link>
+          <Link to="/todo">ToDo</Link>
+        </nav>
+
+        <Routes>
+          <Route path="/chat" element={<Chat messages={messages} />} />
+          <Route path="/todo" element={<TodoApp tasks={tasks} />} />
+          <Route
+            path="/"
+            element={
+              <div>
+                <h1>Главная страница</h1>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Введите сообщение"
+                />
+                <button onClick={addMessage}>Отправить сообщение</button>
+
+                <input
+                  type="text"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  placeholder="Введите задачу"
+                />
+                <button onClick={() => addTask(newTask)}>Добавить задачу</button>
+              </div>
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
