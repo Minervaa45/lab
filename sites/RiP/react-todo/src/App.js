@@ -14,18 +14,18 @@ function App() {
   useEffect(() => {
     axios.get('http://localhost:3001/messages')
       .then(response => setMessages(response.data))
-      .catch(error => console.error('Error fetching messages:', error));
+      .catch(error => console.error('Ошибка сообщения:', error));
 
     axios.get('http://localhost:3001/tasks')
       .then(response => setTasks(response.data))
-      .catch(error => console.error('Error fetching tasks:', error));
+      .catch(error => console.error('Ошибка таска:', error));
   }, []);
 
   const addMessage = () => {
     if (newMessage.trim() !== '') {
       axios.post('http://localhost:3001/messages', { text: newMessage })
         .then(response => setMessages([...messages, response.data]))
-        .catch(error => console.error('Error sending message:', error));
+        .catch(error => console.error('Ошибка отправки сообщения:', error));
       setNewMessage('');
     }
   };
@@ -34,19 +34,19 @@ function App() {
     if (taskText.trim() !== '') {
       axios.post('http://localhost:3001/tasks', { text: taskText })
         .then(response => setTasks([...tasks, response.data]))
-        .catch(error => console.error('Error adding task:', error));
+        .catch(error => console.error('Ошибка добавления таска:', error));
     }
   };
 
   const removeTask = (taskId) => {
     axios.delete(`http://localhost:3001/tasks/${taskId}`)
       .then(() => setTasks(tasks.filter(task => task.id !== taskId)))
-      .catch(error => console.error('Error deleting task:', error));
+      .catch(error => console.error('Ошибка удаления таска:', error));
   };
 
   return (
     <div className="App">
-      <h1>Todo App with Chat</h1>
+      <h1>Todo App</h1>
       <Chat messages={messages} onSendMessage={addMessage} />
       <TodoApp tasks={tasks} onAddTask={addTask} onRemoveTask={removeTask} />
     </div>
