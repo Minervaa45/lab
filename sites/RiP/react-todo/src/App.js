@@ -12,18 +12,18 @@ function App() {
   const [newTask, setNewTask] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3001/messages')
+    axios.get('http://localhost:8000/api/todo/')
       .then(response => setMessages(response.data))
       .catch(error => console.error('Ошибка сообщения:', error));
 
-    axios.get('http://localhost:3001/tasks')
+    axios.get('http://localhost:8000/api/chat/')
       .then(response => setTasks(response.data))
       .catch(error => console.error('Ошибка таска:', error));
   }, []);
 
   const addMessage = () => {
     if (newMessage.trim() !== '') {
-      axios.post('http://localhost:3001/messages', { text: newMessage })
+      axios.post('http://localhost:8000/api/chat/', { text: newMessage })
         .then(response => setMessages([...messages, response.data]))
         .catch(error => console.error('Ошибка отправки сообщения:', error));
       setNewMessage('');
@@ -32,14 +32,14 @@ function App() {
 
   const addTask = (taskText) => {
     if (taskText.trim() !== '') {
-      axios.post('http://localhost:3001/tasks', { text: taskText })
+      axios.post('http://localhost:8000/api/todo/', { text: taskText })
         .then(response => setTasks([...tasks, response.data]))
         .catch(error => console.error('Ошибка добавления таска:', error));
     }
   };
 
   const removeTask = (taskId) => {
-    axios.delete(`http://localhost:3001/tasks/${taskId}`)
+    axios.delete(`http://localhost:8000/api/todo/${taskId}`)
       .then(() => setTasks(tasks.filter(task => task.id !== taskId)))
       .catch(error => console.error('Ошибка удаления таска:', error));
   };
