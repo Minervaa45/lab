@@ -1,5 +1,3 @@
-# views.py
-
 from rest_framework import viewsets
 from .models import ChatRoom, Message
 from .serializers import ChatRoomSerializer, MessageSerializer
