@@ -40,7 +40,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_recent_messages(self):
-        recent_messages = Message.objects.all().order_by('-timestamp')[:10]
+        recent_messages = Message.objects.all().order_by('timestamp')
+        recent_messages = recent_messages[len(recent_messages)-10:]
         message_serializer = MessageSerializer(recent_messages, many=True)
         serialized_messages = message_serializer.data
         return serialized_messages
