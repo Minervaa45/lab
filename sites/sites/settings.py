@@ -32,16 +32,16 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'daphne',
-    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'myapp',
-    'chat',
+    'chat.apps.ChatConfig',
     "corsheaders",
 ]
 
@@ -129,16 +129,21 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Указание ASGI-приложения
-ASGI_APPLICATION = 'sites.asgi.application'
 
+# WEBSOCKETS
 
-# Указание каналов слоя
-CHANNELS_LAYERS = {
-  'default': {
-    'BACKEND': 'channels.layers.InMemoryChannelLayer'
-  }
+ASGI_APPLICATION = "sites.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
 }
+
+CHAT_GROUP_NAME = 'new_message'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

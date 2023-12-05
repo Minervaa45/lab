@@ -13,10 +13,13 @@ const LabeledInput = ({ type, value, onChange, placeholder }) => (
 const ItemList = ({ items, renderItem }) => (
   <>
     {items.map((item) => (
-      <div key={item.id}>{renderItem(item)}</div>
+      <div key={item.id}>
+        {renderItem(item)}
+      </div>
     ))}
   </>
 );
+
 
 function Chat() {
   const [messages, setMessages] = useState([]);
@@ -33,7 +36,9 @@ function Chat() {
 
     newClient.onmessage = (message) => {
       const data = JSON.parse(message.data);
-      setMessages((prevMessages) => [...prevMessages, data]);
+      if (!messages.some((msg) => msg.id === data.id)) {
+        setMessages((prevMessages) => [...prevMessages, data]);
+      }
     };
 
     newClient.onclose = (event) => {
@@ -51,7 +56,9 @@ function Chat() {
     };
   }, []);
 
-  const addMessage = () => {
+  const addMessage = (event) => {
+    event.preventDefault();
+
     if (newMessage.trim() !== '' && authorName.trim() !== '' && client) {
       const messageData = {
         type: 'websocket.receive',
@@ -59,16 +66,13 @@ function Chat() {
         text: newMessage,
       };
 
-      // Send the message through the websocket connection
       client.send(JSON.stringify(messageData));
 
-      // Update the local state
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { author: authorName, content: newMessage, timestamp: new Date().toISOString() },
-      ]);
+      // setMessages((prevMessages) => [
+      //   ...prevMessages,
+      //   { author: authorName, content: newMessage, timestamp: new Date().toISOString() },
+      // ]);
 
-      // Clear the input
       setNewMessage('');
     }
   };
@@ -85,11 +89,11 @@ function Chat() {
       <ItemList
         items={messages}
         renderItem={(msg) => (
-          <>
+          <div key={msg.id}>
             <strong>{msg.author}</strong>: {msg.content}
             <br />
             <small>{new Date(msg.timestamp).toLocaleString()}</small>
-          </>
+        </div>
         )}
       />
       <LabeledInput
