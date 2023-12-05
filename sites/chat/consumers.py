@@ -1,73 +1,42 @@
-# consumers.py
-
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from asgiref.sync import async_to_sync
-from django.contrib.auth import get_user_model
 from .models import Message
-
-User = get_user_model()
+from .serializers import MessageSerializer
+from channels.db import database_sync_to_async
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = f'chat_{self.room_name}'
-
-        # Присоединение к группе
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
-
         await self.accept()
+        await self.send_recent_messages()
 
     async def disconnect(self, close_code):
-        # Отсоединение от группы
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        pass
 
-    # Получение сообщения от WebSocket
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        user_id = text_data_json['user_id']
+        message = json.loads(text_data)
+        await self.save_message(text_data)
 
-        # Сохранение сообщения
-        user = await self.get_user(user_id)
-        if user:
-            await self.save_message(user, message)
+    async def send_message(self, message):
+        await self.send(text_data=json.dumps(message))
 
-        # Отправка сообщения в группу
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'user': user.username if user else 'Anonymous'
-            }
-        )
+    async def send_recent_messages(self):
+        recent_messages = await self.get_recent_messages()
+        for message in recent_messages:
+            await self.send_message(message)
 
-    async def chat_message(self, event):
-        message = event['message']
-        user = event['user']
+    @database_sync_to_async
+    def get_recent_messages(self):
+        recent_messages = Message.objects.all().order_by('timestamp')
+        recent_messages = recent_messages[len(recent_messages)-10:]
+        message_serializer = MessageSerializer(recent_messages, many=True)
+        serialized_messages = message_serializer.data
+        return serialized_messages
 
-        # Отправка сообщения в WebSocket
-        await self.send(text_data=json.dumps({
-            'user': user,
-            'message': message
-        }))
+    @database_sync_to_async
+    def save_message(self, message):
+        message = json.loads(message)
+        Message.objects.create(author=message['author'], content=message['text'])
 
-    @staticmethod
-    @async_to_sync
-    async def get_user(user_id):
-        try:
-            return User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return None
-
-    @staticmethod
-    @async_to_sync
-    async def save_message(user, content):
-        Message.objects.create(author=user, content=content)
+        # Implement logic to save the message to the database
+        # You can use your MessageSerializer to deserialize the message
+        # Ensure to call message.is_valid() and message.save() appropriately

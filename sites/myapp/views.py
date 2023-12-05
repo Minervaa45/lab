@@ -16,25 +16,3 @@ def object_list(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def object_detail(request, pk):
-    try:
-        obj = MyObject.objects.get(pk=pk)
-    except MyObject.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = MyObjectSerializer(obj)
-        return Response(serializer.data)
-    elif request.method == 'PUT':
-        serializer = MyObjectSerializer(obj, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'DELETE':
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-# Create your views here.

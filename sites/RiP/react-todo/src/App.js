@@ -1,23 +1,74 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
+import { w3cwebsocket as W3CWebSocket } from 'websocket';
 
-// Компонент для чата
+const LabeledInput = ({ type, value, onChange, placeholder }) => (
+  <>
+    <input type={type} value={value} onChange={onChange} placeholder={placeholder} />
+    <br />
+  </>
+);
+
+const ItemList = ({ items, renderItem }) => (
+  <>
+    {items.map((item) => (
+      <div key={item.id}>{renderItem(item)}</div>
+    ))}
+  </>
+);
+
 function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [authorName, setAuthorName] = useState('');
+  const [client, setClient] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/chat/messages/')
-      .then(response => setMessages(response.data))
-      .catch(error => console.error('Ошибка загрузки сообщений:', error));
+    const newClient = new W3CWebSocket('ws://127.0.0.1:8000/ws');
+
+    newClient.onopen = () => {
+      console.log('WebSocket Client Connected');
+    };
+
+    newClient.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+      setMessages((prevMessages) => [...prevMessages, data]);
+    };
+
+    newClient.onclose = (event) => {
+      console.error('WebSocket Closed: ', event);
+    };
+
+    newClient.onerror = (error) => {
+      console.error('WebSocket Error: ', error);
+    };
+
+    setClient(newClient); // Сохраняем client в состоянии
+
+    return () => {
+      newClient.close();
+    };
   }, []);
 
   const addMessage = () => {
-    if (newMessage.trim() !== '') {
-      axios.post('http://localhost:8000/api/chat/messages/', { author: 'AuthorName', content: newMessage })
-        .then(response => setMessages([...messages, response.data]))
-        .catch(error => console.error('Ошибка отправки сообщения:', error));
+    if (newMessage.trim() !== '' && authorName.trim() !== '' && client) {
+      const messageData = {
+        type: 'websocket.receive',
+        author: authorName,
+        text: newMessage,
+      };
+
+      // Send the message through the websocket connection
+      client.send(JSON.stringify(messageData));
+
+      // Update the local state
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { author: authorName, content: newMessage, timestamp: new Date().toISOString() },
+      ]);
+
+      // Clear the input
       setNewMessage('');
     }
   };
@@ -25,14 +76,23 @@ function Chat() {
   return (
     <div>
       <h2>Чат</h2>
-      {messages.map(msg => (
-        <div key={msg.id}>
-          <strong>{msg.author}</strong>: {msg.content}
-          <br />
-          <small>{new Date(msg.timestamp).toLocaleString()}</small>
-        </div>
-      ))}
-      <input
+      <LabeledInput
+        type="text"
+        value={authorName}
+        onChange={(e) => setAuthorName(e.target.value)}
+        placeholder="Имя автора"
+      />
+      <ItemList
+        items={messages}
+        renderItem={(msg) => (
+          <>
+            <strong>{msg.author}</strong>: {msg.content}
+            <br />
+            <small>{new Date(msg.timestamp).toLocaleString()}</small>
+          </>
+        )}
+      />
+      <LabeledInput
         type="text"
         value={newMessage}
         onChange={(e) => setNewMessage(e.target.value)}
@@ -43,7 +103,6 @@ function Chat() {
   );
 }
 
-// Компонент для ToDo
 function Todo() {
   const [tasks, setTasks] = useState([]);
   const [newTaskName, setNewTaskName] = useState('');
@@ -57,7 +116,10 @@ function Todo() {
 
   const addTask = () => {
     if (newTaskName.trim() !== '') {
-      axios.post('http://127.0.0.1:8000/api/todo/', { name: newTaskName, description: newTaskDescription })
+      axios.post('http://127.0.0.1:8000/api/todo/', {
+        name: newTaskName,
+        description: newTaskDescription,
+      })
         .then(response => setTasks([...tasks, response.data]))
         .catch(error => console.error('Ошибка добавления задачи:', error));
       setNewTaskName('');
@@ -68,12 +130,12 @@ function Todo() {
   return (
     <div>
       <h2>ToDo</h2>
-      {tasks.map(task => (
-        <div key={task.id}>
+      <ItemList items={tasks} renderItem={(task) => (
+        <>
           <strong>{task.name}</strong>: {task.description}
-        </div>
-      ))}
-      <input
+        </>
+      )} />
+      <LabeledInput
         type="text"
         value={newTaskName}
         onChange={(e) => setNewTaskName(e.target.value)}
@@ -89,7 +151,6 @@ function Todo() {
   );
 }
 
-// Основной компонент приложения
 function App() {
   return (
     <Router>
